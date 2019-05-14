@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<!-- JQuery import -->
+<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+  <style>
+
+table {
+    border-collapse: collapse;
+    width: 40%;
+}
+th, td {
+    text-align: center;
+    padding: 15px;
+    font-size: 15px;
+}
+th {
+    background-color: #5499C7;
+    color: white;
+    font-style: bold;
+    font-size: 15px;
+}
+</style>
+</head>
+
+<body>
+
+	<!-- Upload file form -->
+	<form id="upload-file-form">
+		<label for="upload-file-input">Upload your file:</label> <input
+			id="upload-file-input" type="file" name="uploadfile" accept="*" /> <br />
+		<span id="upload-file-message"></span>
+	</form>
+	<br />
+	<div id="tableDiv" style="margin-top: 40px"></div>
+	<div id="chartContainer" style="height: 370px; max-width: 920px; margin: 50px auto;"></div>
+	<hr />
+
+
+	<!-- Javascript functions -->
+	<script>
+		$(document).ready(function() {
+			$("#upload-file-input").on("change", uploadFile);
+		});
+
+		function getFund(name) {
+			$
+					.ajax({
+						url : "/getFund?name="+'ICICI',
+						type : "GET",
+						success : function(data) {
+							$('#chartContainer').empty();
+							loadChart(data);
+							
+						},
+						error : function() {
+						
+						}
+					});
+		}
+		function uploadFile() {
+			$
+					.ajax({
+						url : "/uploadFile",
+						type : "POST",
+						data : new FormData($("#upload-file-form")[0]),
+						enctype : 'multipart/form-data',
+						processData : false,
+						contentType : false,
+						cache : false,
+						success : function(data) {
+							$('#tableDiv').empty();
+							loadTable(data);
+							$("#upload-file-message").text(
+									"File succesfully uploaded");
+						},
+						error : function() {
+							// Handle upload error
+							$("#upload-file-message")
+									.text(
+											"File not uploaded (perhaps it's too much big)");
+						}
+					});
+		}
+		function loadTable(data) {
+			var number_of_rows = data.length;
+			var k = 0;
+			var table_body = '<table border="1" id="example"><thead><tr><th>Fund Name</th><th>Price</th><th>Date</th><th>Details</th></tr></thead><tbody>';
+			for (i = 0; i < number_of_rows; i++) {
+
+				var fundName="\"+data[i].fundName+\"" ;
+				table_body += '<tr>';
+				table_body += '<td>';
+				table_body += data[i].fundName;
+				table_body += '</td>';
+
+				table_body += '<td>';
+				table_body += data[i].price;
+				table_body += '</td>';
+				
+				table_body += '<td>';
+				table_body += data[i].date;
+				table_body += '</td>';
+				
+				table_body += '<td>';
+				table_body += '<a href="#" onclick="getFund()">view details</a>';
+				table_body += '</td>';
+
+				table_body += '</tr>';
+			}
+
+			table_body += '</tbody></table>';
+			$('#tableDiv').html(table_body);
+		}
+		
+		function loadChart(data){
+
+			var chart = new CanvasJS.Chart("chartContainer", {
+				animationEnabled: true,
+				title:{
+					text: "Stock Price of "+data[0].fundName
+				},
+				axisX:{
+					valueFormatString: "DD MMM",
+					crosshair: {
+						enabled: true,
+						snapToDataPoint: true
+					}
+				},
+				axisY: {
+					title: "Closing Price (in USD)",
+					includeZero: false,
+					valueFormatString: "$##0.00",
+					crosshair: {
+						enabled: true,
+						snapToDataPoint: true,
+						labelFormatter: function(e) {
+							return "$" + CanvasJS.formatNumber(e.value, "##0.00");
+						}
+					}
+				},
+				data: [{
+					type: "area",
+					xValueFormatString: "DD MMM",
+					yValueFormatString: "$##0.00",
+					dataPoints: [
+						{ x: new Date(2019, 00, 26), y: 144 },
+						{ x: new Date(2019, 02, 02), y: 165 },
+						{ x: new Date(2019, 04, 20), y: 132 },
+						{ x: new Date(2019, 06, 28), y: 180 }
+						
+					]
+				}]
+			});
+			chart.render();
+		}
+	</script>
+
+</body>
+
+</html>
